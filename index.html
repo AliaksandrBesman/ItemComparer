@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Сравнитель бумажных полотенец</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            justify-content: space-between;
+        }
+        input, button {
+            width: 100%;
+            padding: 15px;
+            margin: 5px 0;
+            box-sizing: border-box;
+        }
+        .result {
+            margin-top: 20px;
+            overflow-x: auto;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid #ccc;
+            padding: 10px;
+            text-align: center;
+        }
+        .count {
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+<h1>Сравнитель бумажных полотенец</h1>
+
+<div id="input-form">
+    <h2>Введите параметры полотенца</h2>
+    <input type="number" id="price" placeholder="Цена" required>
+    <input type="number" id="sheets" placeholder="Количество листов" required>
+    <input type="number" id="length" placeholder="Длина (м)" required>
+    <input type="number" id="height" placeholder="Высота (см)" required>
+    <input type="number" id="width" placeholder="Ширина (см)" required>
+    <button onclick="addTowel()">Добавить</button>
+</div>
+
+<button onclick="compareTowels()" style="margin-top: 20px;">Сравнить</button>
+
+<div class="count" id="towelCount">Добавлено полотенец: 0</div>
+
+<div class="result" id="result"></div>
+
+<script>
+    const towels = [];
+
+    function addTowel() {
+        const price = parseFloat(document.getElementById('price').value);
+        const sheets = parseInt(document.getElementById('sheets').value);
+        const inputLength = parseFloat(document.getElementById('length').value);
+        const height = parseFloat(document.getElementById('height').value);
+        const width = parseFloat(document.getElementById('width').value);
+
+        if (!price || !sheets || !height || !width) {
+            alert("Пожалуйста, заполните все поля.");
+            return;
+        }
+
+        // Если длина не введена, вычисляем её
+        const length = inputLength || (width * sheets / 100); // перевод в метры
+
+        towels.push({ price, sheets, length, height, width });
+
+        // Сброс значений полей ввода
+        document.getElementById('price').value = '';
+        document.getElementById('sheets').value = '';
+        document.getElementById('length').value = '';
+        document.getElementById('height').value = '';
+        document.getElementById('width').value = '';
+
+        // Обновление счётчика
+        document.getElementById('towelCount').innerText = `Добавлено полотенец: ${towels.length}`;
+    }
+
+    function calculateAdvantages() {
+        return towels.map(towel => {
+            const pricePerSheet = towel.price / towel.sheets;
+            const areaInMeters = (towel.length) * (towel.height / 100); // Площадь в квадратных метрах
+            const pricePerMeter = towel.price / areaInMeters; // Цена за метр
+            return { pricePerSheet, pricePerMeter };
+        });
+    }
+
+    function compareTowels() {
+        if (towels.length < 2) {
+            alert("Необходимо добавить как минимум два полотенца для сравнения.");
+            return;
+        }
+
+        let resultHTML = '<table><tr><th>Параметры</th>';
+        towels.forEach((_, index) => {
+            resultHTML += `<th>Полотенце ${index + 1}</th>`;
+        });
+        resultHTML += '</tr>';
+
+        const parameters = ['price', 'sheets', 'length', 'height', 'width'];
+        const parameterNames = ['Цена', 'Количество листов', 'Длина (м)', 'Высота (см)', 'Ширина (см)'];
+
+        // Заполнение параметров
+        parameterNames.forEach((paramName, index) => {
+            resultHTML += `<tr><td>${paramName}</td>`;
+            towels.forEach(towel => {
+                resultHTML += `<td>${towel[parameters[index]]}</td>`;
+            });
+            resultHTML += '</tr>';
+        });
+
+        // Заполнение строк выгоды
+        const advantages = calculateAdvantages();
+        resultHTML += '<tr><td>Выгода</td>';
+        advantages.forEach(adv => {
+            resultHTML += `<td>Лист: ${adv.pricePerSheet.toFixed(2)}<br>Метр: ${adv.pricePerMeter.toFixed(2)}</td>`;
+        });
+        resultHTML += '</tr>';
+
+        resultHTML += '</table>';
+        document.getElementById('result').innerHTML = resultHTML;
+    }
+</script>
+
+</body>
+</html>
